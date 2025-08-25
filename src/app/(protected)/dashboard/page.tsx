@@ -1,13 +1,9 @@
 // /app/page.tsx
 
-import { getDashboardData } from "@/lib/data/dashboard";
 import { SectionCards } from "./components/section-cards";
 import { TestResultChart } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
 
-import data from "./data.json";
 import { getAllTests } from "@/actions/test/get-all-tests";
-import { nullable } from "zod";
 
 export default async function Page() {
   const { tests } = await getAllTests()
