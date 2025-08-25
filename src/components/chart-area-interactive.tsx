@@ -47,7 +47,7 @@ export function TestResultChart({ testData }: TestResultChartProps) {
   const chartData = testData.results.map((result) => ({
     ...result,
     force: parseFloat(result.force),
-  })).sort((a, b) => a.second - b.second); // Garante que os dados estão ordenados pelo tempo
+  })).sort((a: any, b: any) => a.second - b.second); // Garante que os dados estão ordenados pelo tempo
 
   return (
     <Card>
