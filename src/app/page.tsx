@@ -253,20 +253,12 @@ export default function SirusLandingPage() {
           <nav className="space-x-4">
             <a
               href="/login"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/login');
-              }}
               className="px-4 py-2 rounded-md text-sm font-medium hover:bg-purple-500/10 transition"
             >
               Login
             </a>
             <a
               href="/cadastro"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/cadastro');
-              }}
               className="px-4 py-2 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-700 transition"
             >
               Cadastre-se
@@ -302,10 +294,6 @@ export default function SirusLandingPage() {
           <div className="mt-10 flex items-center justify-center gap-x-6">
             <a
               href="/cadastro"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate('/cadastro');
-              }}
               className="rounded-md bg-purple-600 px-5 py-3 text-sm font-semibold text-white shadow-sm hover:bg-purple-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-600 transition-transform transform hover:scale-105"
             >
               Comece Agora
@@ -380,13 +368,5 @@ export default function SirusLandingPage() {
     </div>
   );
 
-  // Renderiza a página correta com base no estado 'page'
-  switch (page) {
-    case '/login':
-      return <LoginPage />;
-    case '/cadastro':
-      return <SignupPage />;
-    default:
-      return <MainPage />;
-  }
+  return <MainPage />;
 }
