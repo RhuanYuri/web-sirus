@@ -35,7 +35,7 @@ interface TestResultChartProps {
 
 const chartConfig = {
   force: {
-    label: "Força (kN)",
+    label: "Força (N)",
     color: "hsl(var(--primary))",
   },
 } satisfies ChartConfig
@@ -87,7 +87,7 @@ export function TestResultChart({ testData }: TestResultChartProps) {
               name="Tempo"
             />
             <YAxis
-              tickFormatter={(value) => `${value} kN`}
+              tickFormatter={(value) => `${value} N`}
               name="Força"
             />
             <ChartTooltip

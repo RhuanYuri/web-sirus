@@ -24,8 +24,12 @@ export default async function TestDetailPage({ params }: { params: { id: string 
     redirect('/login');
   }
 
-  // Define uma variável para a condição, o que torna o código mais limpo
   const showSettingsCard = session?.user.id === test.userId;
+  const result = test.results.map((result: any) => ({
+            second: parseFloat(String(result.second)),
+            force: parseFloat(String(result.force)),
+          }));
+  const maxForce = Math.max(...result.map((p) => p.force), 0);
 
   return (
     <div className="space-y-6 p-4 md:p-10">
@@ -54,11 +58,17 @@ export default async function TestDetailPage({ params }: { params: { id: string 
       {/* Conteúdo Principal com Layout Adaptável */}
       <main className={`grid grid-cols-1 gap-6 ${showSettingsCard ? 'lg:grid-cols-3' : 'lg:grid-cols-1'}`}>
         <div className={`${showSettingsCard ? 'lg:col-span-2' : ''} space-y-6`}>
-          <TestResultChart testData={test} />
           <Card>
             <CardHeader><CardTitle>Descrição do Teste</CardTitle></CardHeader>
-            <CardContent><p className="text-muted-foreground">{test.description}</p></CardContent>
+            <CardContent>
+              <p className="text-muted-foreground">{test.description}</p>
+              <p className="text-muted-foreground">Força máxima: {maxForce} N</p>
+              
+              
+            </CardContent>
           </Card>
+          <TestResultChart testData={test} />
+          
         </div>
         
         {/* Renderiza o card de configurações apenas se a condição for verdadeira */}
