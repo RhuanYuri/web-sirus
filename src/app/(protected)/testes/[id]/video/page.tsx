@@ -112,120 +112,179 @@ export default function VideoProcessorPage() {
       ctx.fillText(`Pico de Força: ${peakForce.toFixed(2)} N`, canvas.width - textLeftMargin, textY);
   };
 
-
   /**
-   * Desenha o gráfico de área dinâmico no canvas.
+   * ✅ **NOVA VERSÃO**
+   * Desenha o gráfico de área dinâmico no canvas, incluindo eixos, grades e rótulos.
    */
   const drawDynamicChart = (
     ctx: CanvasRenderingContext2D,
     data: ChartPoint[],
     videoTime: number,
-    chartArea: { x: number; y: number; width: number; height: number },
+    chartBox: { x: number; y: number; width: number; height: number },
     peakForceValue: number
   ) => {
     if (data.length === 0) return;
 
-    const { x, y, width, height } = chartArea;
+    // 1. Define um "preenchimento" para criar espaço para os eixos e rótulos
+    const padding = { top: 20, right: 15, bottom: 25, left: 35 };
+    const plotArea = {
+      x: chartBox.x + padding.left,
+      y: chartBox.y + padding.top,
+      width: chartBox.width - padding.left - padding.right,
+      height: chartBox.height - padding.top - padding.bottom,
+    };
 
-    const maxForce = Math.max(...data.map((p) => p.force), 0);
-    const maxTime = Math.max(...data.map((p) => p.second), 0);
+    // 2. Calcula os valores máximos e adiciona 10% de margem para o gráfico não tocar no topo
+    const maxForce = Math.max(...data.map((p) => p.force), 0) * 1.1 || 1;
+    const maxTime = Math.max(...data.map((p) => p.second), 0) || 1;
     
-    // Funções de escala
-    const forceScale = (v: number) => y + height - (v / maxForce) * height;
-    const timeScale = (t: number) => x + (t / maxTime) * width;
+    // 3. Funções de escala para mapear dados (força, tempo) para pixels (x, y)
+    const forceScale = (v: number) => plotArea.y + plotArea.height - (v / maxForce) * plotArea.height;
+    const timeScale = (t: number) => plotArea.x + (t / maxTime) * plotArea.width;
 
-    // Fundo do gráfico
+    // 4. Desenha o fundo branco arredondado do gráfico
     ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(x + 8, y);
-    ctx.lineTo(x + width - 8, y);
-    ctx.quadraticCurveTo(x + width, y, x + width, y + 8);
-    ctx.lineTo(x + width, y + height - 8);
-    ctx.quadraticCurveTo(x + width, y + height, x + width - 8, y + height);
-    ctx.lineTo(x + 8, y + height);
-    ctx.quadraticCurveTo(x, y + height, x, y + height - 8);
-    ctx.lineTo(x, y + 8);
-    ctx.quadraticCurveTo(x, y, x + 8, y);
+    const r = 8; // Raio dos cantos
+    ctx.moveTo(chartBox.x + r, chartBox.y);
+    ctx.lineTo(chartBox.x + chartBox.width - r, chartBox.y);
+    ctx.quadraticCurveTo(chartBox.x + chartBox.width, chartBox.y, chartBox.x + chartBox.width, chartBox.y + r);
+    ctx.lineTo(chartBox.x + chartBox.width, chartBox.y + chartBox.height - r);
+    ctx.quadraticCurveTo(chartBox.x + chartBox.width, chartBox.y + chartBox.height, chartBox.x + chartBox.width - r, chartBox.y + chartBox.height);
+    ctx.lineTo(chartBox.x + r, chartBox.y + chartBox.height);
+    ctx.quadraticCurveTo(chartBox.x, chartBox.y + chartBox.height, chartBox.x, chartBox.y + chartBox.height - r);
+    ctx.lineTo(chartBox.x, chartBox.y + r);
+    ctx.quadraticCurveTo(chartBox.x, chartBox.y, chartBox.x + r, chartBox.y);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
 
-    // **NOVO: Desenha a linha de pico de força**
-    const peakForceY = forceScale(peakForceValue);
-    ctx.strokeStyle = '#ef4444'; // Vermelho para a linha de pico
+    // 5. Desenha os eixos, grades e rótulos
+    ctx.save();
+    ctx.strokeStyle = '#d1d5db'; // Cinza claro para grades
     ctx.lineWidth = 1;
-    ctx.setLineDash([4, 4]); // Linha tracejada
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#4b5563'; // Cinza escuro para texto
+
+    // Eixo Y (Força): desenha 4 linhas de grade e seus rótulos
+    const numYTicks = 4;
+    ctx.textAlign = 'right';
+    ctx.textBaseline = 'middle';
+    for (let i = 0; i <= numYTicks; i++) {
+      const forceValue = (maxForce / numYTicks) * i;
+      const tickY = forceScale(forceValue);
+      if (i > 0) { // Não desenha grade na posição 0 (já é o eixo X)
+        ctx.beginPath();
+        ctx.moveTo(plotArea.x, tickY);
+        ctx.lineTo(plotArea.x + plotArea.width, tickY);
+        ctx.stroke();
+      }
+      ctx.fillText(forceValue.toFixed(0), plotArea.x - 8, tickY);
+    }
+
+    // Eixo X (Tempo): desenha 4 rótulos de tempo
+    const numXTicks = 4;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    for (let i = 0; i <= numXTicks; i++) {
+      const timeValue = (maxTime / numXTicks) * i;
+      const tickX = timeScale(timeValue);
+      ctx.fillText(timeValue.toFixed(1) + 's', tickX, plotArea.y + plotArea.height + 6);
+    }
+    
+    // Títulos dos eixos
+    ctx.fillStyle = '#334155';
+    ctx.font = 'bold 12px "Inter", sans-serif';
+    ctx.textAlign = 'center';
+    
+    // Título do Eixo Y (Força) - rotacionado
+    ctx.save();
+    ctx.translate(chartBox.x + 15, chartBox.y + chartBox.height / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.textBaseline = 'bottom';
+    ctx.fillText('Força (N)', 0, 0);
+    ctx.restore();
+
+    // Título do Eixo X (Tempo)
+    ctx.textBaseline = 'top';
+    ctx.fillText('Tempo (s)', plotArea.x + plotArea.width / 2, plotArea.y + plotArea.height + 16);
+
+    ctx.restore();
+
+    // 6. Desenha a linha de Pico de Força (FIXA)
+    const peakForceY = forceScale(peakForceValue);
+    ctx.strokeStyle = '#ef4444'; // Vermelho
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([4, 4]); // Tracejado
     ctx.beginPath();
-    ctx.moveTo(x, peakForceY);
-    ctx.lineTo(x + width, peakForceY);
+    ctx.moveTo(plotArea.x, peakForceY);
+    ctx.lineTo(plotArea.x + plotArea.width, peakForceY);
     ctx.stroke();
-    ctx.setLineDash([]); // Reseta o tracejado para as próximas linhas
+    ctx.setLineDash([]); // Reseta o tracejado
 
     // Rótulo da linha de pico
     ctx.fillStyle = '#ef4444';
-    ctx.font = '10px "Inter", sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(`Pico: ${peakForceValue.toFixed(2)} N`, x + width - 5, peakForceY - 5);
+    ctx.font = 'bold 10px "Inter", sans-serif';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`Pico: ${peakForceValue.toFixed(2)} N`, plotArea.x + 5, peakForceY - 3);
+
+    // 7. Define uma área de "corte" para que o gráfico não vaze para fora da área de plotagem
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(plotArea.x, plotArea.y, plotArea.width, plotArea.height);
+    ctx.clip();
 
     // Filtra os dados até o tempo atual do vídeo
     const filteredData = data.filter((point) => point.second <= videoTime);
-    if (filteredData.length < 2) return;
+    if (filteredData.length >= 2) {
+      // Gradiente da área
+      const gradient = ctx.createLinearGradient(plotArea.x, plotArea.y, plotArea.x, plotArea.y + plotArea.height);
+      gradient.addColorStop(0, 'rgba(37, 99, 235, 0.6)');
+      gradient.addColorStop(1, 'rgba(37, 99, 235, 0.05)');
+      
+      // Desenha a área preenchida
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.moveTo(timeScale(filteredData[0].second), plotArea.y + plotArea.height);
+      for (const point of filteredData) {
+        ctx.lineTo(timeScale(point.second), forceScale(point.force));
+      }
+      ctx.lineTo(timeScale(filteredData[filteredData.length - 1].second), plotArea.y + plotArea.height);
+      ctx.closePath();
+      ctx.fill();
 
-    // Gradiente da área
-    const gradient = ctx.createLinearGradient(x, y, x, y + height);
-    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.6)');
-    gradient.addColorStop(1, 'rgba(37, 99, 235, 0.05)');
+      // Desenha a linha principal
+      ctx.strokeStyle = '#2563eb';
+      ctx.lineWidth = 2.5;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (const point of filteredData) {
+        ctx.lineTo(timeScale(point.second), forceScale(point.force));
+      }
+      ctx.stroke();
+
+      // Indicador do valor atual na ponta da linha
+      const lastPoint = filteredData[filteredData.length - 1];
+      const currentX = timeScale(lastPoint.second);
+      const currentY = forceScale(lastPoint.force);
+
+      ctx.beginPath();
+      ctx.arc(currentX, currentY, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = '#2563eb';
+      ctx.fill();
+
+      ctx.fillStyle = '#1e293b';
+      ctx.font = 'bold 12px "Inter", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`${lastPoint.force.toFixed(2)} N`, currentX + 8, currentY - 4);
+    }
     
-    // Desenha a área preenchida
-    ctx.fillStyle = gradient;
-    ctx.beginPath();
-    ctx.moveTo(timeScale(filteredData[0].second), y + height);
-    ctx.lineTo(timeScale(filteredData[0].second), forceScale(filteredData[0].force));
-    for (const point of filteredData) {
-      ctx.lineTo(timeScale(point.second), forceScale(point.force));
-    }
-    ctx.lineTo(timeScale(filteredData[filteredData.length - 1].second), y + height);
-    ctx.closePath();
-    ctx.fill();
-
-    // Desenha a linha principal
-    ctx.strokeStyle = '#2563eb';
-    ctx.lineWidth = 2.5;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(timeScale(filteredData[0].second), forceScale(filteredData[0].force));
-    for (const point of filteredData) {
-      ctx.lineTo(timeScale(point.second), forceScale(point.force));
-    }
-    ctx.stroke();
-
-    // **NOVO: Desenha o indicador do valor atual**
-    const lastPoint = filteredData[filteredData.length - 1];
-    const currentX = timeScale(lastPoint.second);
-    const currentY = forceScale(lastPoint.force);
-
-    // Círculo na ponta da linha
-    ctx.beginPath();
-    ctx.arc(currentX, currentY, 4, 0, 2 * Math.PI);
-    ctx.fillStyle = '#2563eb';
-    ctx.fill();
-
-    // Texto com o valor da força
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 12px "Inter", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText(`${lastPoint.force.toFixed(2)} N`, currentX + 8, currentY - 8);
-
-    // Rótulos dos eixos
-    ctx.fillStyle = '#334155';
-    ctx.font = '12px "Inter", sans-serif';
-    ctx.textAlign = 'left';
-    ctx.fillText('Força (N)', x + 10, y + 15);
-    ctx.textAlign = 'right';
-    ctx.fillText('Tempo (s)', x + width - 10, y + height - 10);
+    ctx.restore(); // Remove a área de corte
   };
 
   const handleDownloadWithChart = async () => {
@@ -290,7 +349,9 @@ export default function VideoProcessorPage() {
       const chartWidth = canvas.width * 0.4;
       const chartHeight = canvas.height * 0.35;
       const margin = canvas.width * 0.02;
-      const chartArea = {
+      
+      // Renomeado de 'chartArea' para 'chartBox' para corresponder à nova função
+      const chartBox = {
         x: margin,
         y: canvas.height - chartHeight - margin,
         width: chartWidth,
@@ -298,7 +359,7 @@ export default function VideoProcessorPage() {
       };
 
       // Passa o valor de peakForce para a função de desenho
-      drawDynamicChart(ctx, chartData, video.currentTime, chartArea, peakForce);
+      drawDynamicChart(ctx, chartData, video.currentTime, chartBox, peakForce);
       drawDataOverlay(ctx, canvas);
 
       setProgress((video.currentTime / video.duration) * 100);
@@ -404,7 +465,6 @@ export default function VideoProcessorPage() {
                           cursor={{ stroke: '#334155', strokeWidth: 1, strokeDasharray: '3 3' }}
                           content={<ChartTooltipContent indicator="dot" />}
                         />
-                        {/* **NOVO: Linha de referência para o pico de força no gráfico de preview** */}
                         <ReferenceLine 
                           y={peakForce} 
                           label={{ value: `Pico (${peakForce.toFixed(2)} N)`, position: 'insideTopRight', fill: '#ef4444', fontSize: 10 }} 
