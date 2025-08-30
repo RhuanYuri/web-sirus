@@ -3,10 +3,11 @@
 import { SectionCards } from "./components/section-cards";
 import { TestResultChart } from "@/components/chart-area-interactive";
 
-import { getAllTests } from "@/actions/test/get-all-tests";
+
+import { getTestCount } from "@/actions/test/test-counts";
 
 export default async function Page() {
-  const { tests } = await getAllTests()
+  const { tests } = await getTestCount()
   if(!tests || tests === null) {
     return <div className="p-4">Nenhum teste encontrado. Registre um novo teste para visualizar os dados aqui.</div>
   }

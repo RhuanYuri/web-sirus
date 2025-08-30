@@ -5,6 +5,9 @@ import { TestResultTable } from "./components/TestResultTable";
 import { getAllTests } from "@/actions/test/get-all-tests";
 import { FilterInput, PaginationControls } from "./components/testClientComponents";
 import { Suspense } from "react";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 // Componente de carregamento para a tabela
 function TableSkeleton() {
@@ -19,6 +22,12 @@ export default async function TestsPage({
     page?: string;
   };
 }) {
+  const session = await auth.api.getSession({
+    headers: await headers()
+  })
+  if(!session?.user){
+    redirect('/login')
+  }
   const query = searchParams?.query || '';
   const currentPage = Number(searchParams?.page) || 1;
   const limit = 10; // Itens por página
@@ -52,7 +61,7 @@ export default async function TestsPage({
 
         {totalCount > 0 ? (
           <Suspense key={query + currentPage} fallback={<TableSkeleton />}>
-            <TestResultTable items={tests} />
+            <TestResultTable items={tests} userId={session.user.id} />
             <PaginationControls
               currentPage={currentPage}
               totalPages={totalPages}

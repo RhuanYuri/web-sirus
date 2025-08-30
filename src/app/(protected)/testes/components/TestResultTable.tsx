@@ -42,14 +42,16 @@ type TestItem = {
   isPublic: boolean; // Supondo que o status possa ser derivado de algum campo
   user: {
     name: string | null;
+    id: string
   };
 };
 
 interface TestResultTableProps {
   items: TestItem[];
+  userId: string
 }
 
-export function TestResultTable({ items }: TestResultTableProps) {
+export function TestResultTable({ items, userId }: TestResultTableProps) {
   // 2. Estados para controlar o diálogo e a transição
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
@@ -119,14 +121,21 @@ export function TestResultTable({ items }: TestResultTableProps) {
                       <DropdownMenuItem asChild>
                         <Link href={`/testes/${test.id}`}>Ver detalhes</Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                        onSelect={() => openConfirmationDialog(test.id)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Excluir
-                      </DropdownMenuItem>
+                      {
+                          test.user.id === userId && (
+                            <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-red-600 focus:text-red-600 focus:bg-red-50"
+                              onSelect={() => openConfirmationDialog(test.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                            </>
+                          )
+                        }
+                      
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
