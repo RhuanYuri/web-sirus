@@ -360,11 +360,10 @@ export default function SirusLandingPage() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 border-t border-purple-500/10">
-        <div className="container mx-auto py-6 px-6 text-center text-gray-400">
-          <p>&copy; {new Date().getFullYear()} Sirus. Todos os direitos reservados.</p>
+      <div className="border-t border-purple-500/30 pt-8 text-center text-purple-300">
+          <p>&copy; {new Date().getFullYear()} SIRIUS ROCKETS. Todos os direitos reservados.</p>
+          <p>Desenvolvido por <a href="https://instagram.com/rhuan__yuri" className="text-purple-400 hover:text-purple-300 transition-colors">Rhuã Yuri</a> e <a href="https://wa.me/559889196975" target='_blank' className="text-purple-400 hover:text-purple-300 transition-colors">Hector Fernandes</a></p>
         </div>
-      </footer>
     </div>
   );
 
